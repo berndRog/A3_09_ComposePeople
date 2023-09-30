@@ -1,0 +1,15 @@
+<resources>
+  <string name="app_name">Compose People</string>
+  <string name="person_input">Neuer Kontakt</string>
+  <string name="person_detail">Kontakt bearbeiten</string>
+  <string name="firstName">Vorname</string>
+  <string name="lastName">Nachname</string>
+  <string name="email">Mail</string>
+  <string name="phone">Telefon</string>
+  <string name="send">Senden</string>
+  <string name="save">Speichern</string>
+  <string name="back">Zurück</string>
+  <string name="notEmpty">darf nicht leer sein</string>
+  <string name="leastChars">muss mindestens 3 Zeichen enthalten</string>
+  <string name="invalidChars">enthält unzulässige Zeichen</string>
+</resources>
