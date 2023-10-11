@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.net.toFile
+import de.rogallab.mobile.domain.utilities.logError
 import java.io.File
 import java.util.*
 
@@ -16,7 +17,6 @@ fun readImageFromInternalStorage(uri: Uri): Bitmap? {
 
 fun writeImageToInternalStorage(context: Context, bitmap: Bitmap): String? {
 // .../app_images/...
-// val files:  File = context.filesDir
    val images: File = context.getDir("images", Context.MODE_PRIVATE)
    val fileName: String = "${UUID.randomUUID().toString()}.jpg"
 
@@ -33,6 +33,13 @@ fun writeImageToInternalStorage(context: Context, bitmap: Bitmap): String? {
    return uriPath
 }
 
-fun deleteFileOnInternalStorage(context: Context, fileName:String) {
-   context.deleteFile(fileName)
+fun deleteFileOnInternalStorage(fileName:String): Boolean {
+   try {
+      File(fileName).apply {
+         this.absoluteFile.delete()
+      }
+   } catch(e:Exception ) {
+      logError("ok>deleteFileOnInternalStorage","Error deleting file + ${e.localizedMessage}")
+   }
+   return true
 }

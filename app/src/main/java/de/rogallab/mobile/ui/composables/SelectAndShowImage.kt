@@ -16,9 +16,9 @@ import de.rogallab.mobile.domain.utilities.logDebug
 fun SelectAndShowImage(
    imagePath: String?,                                 // State ↓
    onImagePathChanged: (String?) -> Unit,              // Event ↑
-   tag: String = "ok>ContactSelectAndShow"
-) {
 
+) {
+   val tag = "ok>ContactSelectAndShow"
    logDebug(tag,"Start")
 
    Row(

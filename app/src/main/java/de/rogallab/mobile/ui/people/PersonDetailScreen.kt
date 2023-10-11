@@ -1,5 +1,6 @@
 package de.rogallab.mobile.ui.people
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -18,19 +19,24 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.rogallab.mobile.R
+import de.rogallab.mobile.domain.model.Person
 import de.rogallab.mobile.ui.composables.InputNameMailPhone
 import de.rogallab.mobile.ui.composables.SelectAndShowImage
 import de.rogallab.mobile.ui.composables.ShowErrorMessage
 import de.rogallab.mobile.ui.navigation.NavScreen
 
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.domain.utilities.logInfo
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -43,30 +49,49 @@ fun PersonDetailScreen(
 
    val tag: String = "ok>PersonDetailScreen ."
    logDebug(tag, "Start")
-   // viewModel.clear()
+
+   var savedPerson by remember {
+      mutableStateOf(Person("", ""))
+   }
 
    LaunchedEffect(Unit) {
       id?.let {
          logDebug(tag, "ReadById()")
-         // viewModel.readById(id)
+         viewModel.readById(id)
+         savedPerson = viewModel.getPersonFromState()
       } ?: run {
-         // viewModel.onErrorChange("id not found")
+         // viewModel.onError("id not found")
       }
    }
 
+   BackHandler(
+      enabled = true,
+      onBack = {
+         logDebug(tag, "Back Navigation (Abort)")
+         viewModel.setStateFromPerson(savedPerson, savedPerson.id)
+         // Navigate to 'PeopleList' destination and clear the back stack. As a
+         // result, no further reverse navigation will be possible."
+         navController.navigate(route = NavScreen.PeopleList.route) {
+            popUpTo(route = NavScreen.PeopleList.route) {
+               inclusive = true
+            }
+         }
+      }
+   )
+
    // testing the snackbar
    // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...")
-
    val snackbarHostState = remember { SnackbarHostState() }
    val coroutineScope = rememberCoroutineScope()
-
 
    Scaffold(
       topBar = {
          TopAppBar(
-            title = { Text(stringResource(R.string.person_input)) },
+            title = { Text(stringResource(R.string.person_detail)) },
             navigationIcon = {
                IconButton(onClick = {
+                  logDebug(tag,"Navigation to Home and save changes")
+                  viewModel.update()
                   navController.navigate(route = NavScreen.PeopleList.route) {
                      popUpTo(route = NavScreen.PeopleList.route) { inclusive = true }
                   }
@@ -93,7 +118,7 @@ fun PersonDetailScreen(
             modifier = Modifier
                .padding(top = innerPadding.calculateTopPadding())
 //                .statusBarsPadding()
-               .padding(horizontal = 8.dp)
+               .padding(horizontal = 16.dp)
                .fillMaxWidth()
                .verticalScroll(
                   state = rememberScrollState(),
@@ -117,23 +142,6 @@ fun PersonDetailScreen(
                imagePath = viewModel.imagePath,                         // State ↓
                onImagePathChanged = { viewModel.onImagePathChange(it) } // Event ↑
             )
-
-            Button(
-               modifier = Modifier
-                  .fillMaxWidth(),
-               onClick = {
-                  logDebug(tag, "onClickHandler()")
-                  // val id = viewModel.write()
-                  navController.navigate(route = NavScreen.PeopleList.route) {
-                     popUpTo(route = NavScreen.PeopleList.route) { inclusive = true }
-                  }
-               }
-            ) {
-               Text(
-                  style = MaterialTheme.typography.bodyLarge,
-                  text = stringResource(R.string.save)
-               )
-            }
          }
 
          ShowErrorMessage(
@@ -146,5 +154,4 @@ fun PersonDetailScreen(
          )
       }
    )
-
 }

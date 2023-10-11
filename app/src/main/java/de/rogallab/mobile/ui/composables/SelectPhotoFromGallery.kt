@@ -29,9 +29,8 @@ import de.rogallab.mobile.domain.utilities.logDebug
 @Composable
 fun SelectPhotoFromGallery(
    onImagePathChanged: (String?) -> Unit,  // Event ↑
-   tag: String = "ok>SelectPhotoFromGale."
 ) {
-
+   val tag = "ok>SelectPhotoFromGale."
    logDebug(tag,"Start")
 
    var bitmap:Bitmap?
@@ -59,7 +58,6 @@ fun SelectPhotoFromGallery(
          }
       }
    }
-
 
    Column {
 

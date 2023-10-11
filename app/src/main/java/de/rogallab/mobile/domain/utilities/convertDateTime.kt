@@ -58,7 +58,6 @@ val formatISO: DateTimeFormatter = DateTimeFormatter.ISO_ZONED_DATE_TIME
 
 // Di., 3. Januar 2023, 10:45 Uhr
 
-
 fun zonedDateTimeString(zdt: ZonedDateTime) =
    "${zdt.format(formatShortDayOfWeek)} "+
    "${zdt.format(formatMediumDate)} "+
@@ -78,7 +77,6 @@ fun zonedDateTimeOf(
    zoneId: ZoneId = givenZoneId
 ): ZonedDateTime =
    ZonedDateTime.of(LocalDateTime.of(year,month,day,hour,min,second), givenZoneId)
-
 
 fun zonedDateTimeAt(
    ldt: LocalDateTime,

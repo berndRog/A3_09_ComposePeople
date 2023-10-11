@@ -31,14 +31,15 @@ import de.rogallab.mobile.domain.utilities.logDebug
 @Composable
 fun TakePhotoWithCamera(
    onImagePathChanged: (String?) -> Unit,  // Event ↑
-   tag: String = "ok>TakePhotoWithCamera."
 ) {
-
+   val tag = "ok>TakePhotoWithCamera."
    logDebug(tag, "Start")
+
    val context = LocalContext.current
 
    // callback camera
    val bitmapState = remember { mutableStateOf<Bitmap?>(value = null) }
+
    val cameraLauncher = rememberLauncherForActivityResult(
       ActivityResultContracts.TakePicturePreview()
    ) { // it:Bitmap? ->

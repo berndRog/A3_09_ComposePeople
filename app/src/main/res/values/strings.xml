@@ -1,7 +1,8 @@
 <resources>
   <string name="app_name">Compose People</string>
-  <string name="person_input">Neuer Kontakt</string>
-  <string name="person_detail">Kontakt bearbeiten</string>
+  <string name="people_list">Personen</string>
+  <string name="person_input">Neue Person</string>
+  <string name="person_detail">Person bearbeiten</string>
   <string name="firstName">Vorname</string>
   <string name="lastName">Nachname</string>
   <string name="email">Mail</string>

@@ -1,30 +1,55 @@
 package de.rogallab.mobile
 
+import android.app.Application
+import android.content.res.Resources
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.ViewModel
+import de.rogallab.mobile.domain.utilities.Seed
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.domain.utilities.logInfo
+import java.io.Closeable
 
-class MainViewModel: ViewModel() {
+class MainViewModel(
+   private val _application: Application
+): AndroidViewModel(_application) {
 
-    val permissionQueue: SnapshotStateList<String> = mutableStateListOf()
+   private lateinit var _resources: Resources
+
+   val seed = Seed()
+
+   val permissionQueue: SnapshotStateList<String> = mutableStateListOf()
+
+   fun initializeImages(
+      resources: Resources
+   ) {
+      _resources = resources
+      val context = _application.applicationContext
+      seed.initializeImages(context, _resources)
+   }
+
+   override fun onCleared() {
+      super.onCleared()
+      logInfo(tag,"onCleared()")
+      seed.disposeImages()
+   }
 
     fun addPermission(
         permission: String,
         isGranted: Boolean
     ) {
-        logDebug(_tag,"addPermission $permission $isGranted")
+        logDebug(tag,"addPermission $permission $isGranted")
         if (isGranted || permissionQueue.contains(permission)) return
         permissionQueue.add(permission)
     }
 
     fun removePermission() {
-        logDebug(_tag,"removePermission ${permissionQueue.size}")
+        logDebug(tag,"removePermission ${permissionQueue.size}")
         permissionQueue.removeFirst()
     }
 
     companion object {
-        private val _tag:String = "ok>MainViewModel      ."
+        private const val tag:String = "ok>MainViewModel      ."
     }
-
 }

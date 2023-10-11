@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +19,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,15 +29,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
-import de.rogallab.mobile.ui.composables.permissions.IPermissionText
-import de.rogallab.mobile.ui.composables.permissions.PermissionCamera
-import de.rogallab.mobile.ui.composables.permissions.PermissionRecordAudio
+import androidx.lifecycle.viewModelScope
+import de.rogallab.mobile.domain.utilities.Seed
 import de.rogallab.mobile.ui.navigation.AppNavHost
 import de.rogallab.mobile.ui.theme.AppTheme
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.ui.people.PeopleViewModel
 
 class MainActivity : BaseActivity(tag) {
+
+   private val _seed = Seed()
+   private val _mainViewModel by viewModels<MainViewModel>()
+   private val _peopleViewModel by viewModels<PeopleViewModel>()
 
    // required permissions
    private val permissionsToRequest = arrayOf(
@@ -45,6 +51,12 @@ class MainActivity : BaseActivity(tag) {
    override fun onCreate(savedInstanceState: Bundle?) {
       super.onCreate(savedInstanceState)
 
+      // initialize images from resources
+      _mainViewModel.initializeImages(resources)
+
+      // initialize peoples from seed
+      _peopleViewModel.initialize(_mainViewModel.seed)
+
       setContent {
          AppTheme {
             // A surface container using the 'background' color from the theme
@@ -52,38 +64,30 @@ class MainActivity : BaseActivity(tag) {
                modifier = Modifier.fillMaxSize(),
                color = MaterialTheme.colorScheme.background
             ) {
-
-               val mainViewModel = viewModel<MainViewModel>()
-               CheckPermissions(permissionsToRequest, mainViewModel)
-
-               AppNavHost()
+               RequestPermissions(permissionsToRequest, _mainViewModel)
+               AppNavHost(_peopleViewModel)
             }
          }
       }
    }
 
-   companion object {
-      const val isInfo = true
-      const val isDebug = true
-      //12345678901234567890123
-      private const val tag = "ok>MainActivity       ."
-
-   }
 
    @Composable
-   private fun CheckPermissions(
+   private fun RequestPermissions(
       permissionsToRequest: Array<String>,
       mainViewModel: MainViewModel
    ) {
 
       val activity = (LocalContext.current as? Activity)
 
+      // Setup multiple permission request launcher
       val multiplePermissionRequestLauncher = rememberLauncherForActivityResult(
          contract = ActivityResultContracts.RequestMultiplePermissions(),
-         // callback: user
+         // callback: handle permissions results, i.e store them into the MainViewModel
          onResult = { permissionMap: Map<String, @JvmSuppressWildcards Boolean> ->
+            logDebug(tag, "PermissionRequestLauncher onResult: ")
             permissionsToRequest.forEach { permission ->
-               logDebug(tag, "PermissionRequestLauncher onResult: $permission isGranted ${permissionMap[permission]}")
+               logDebug(tag,"$permission isGranted ${permissionMap[permission]}")
                mainViewModel.addPermission(
                   permission = permission,
                   isGranted = permissionMap[permission] == true  // key = true
@@ -94,27 +98,16 @@ class MainActivity : BaseActivity(tag) {
 
       if (!arePermissionsAlreadyGranted(permissionsToRequest)) {
          // Request permissions, i.e. launch dialog
-//         LaunchedEffect(true) {
-//            LogFun(tag,"PermissionRequestLauncher launched")
-//            multiplePermissionRequestLauncher.launch(
-//               permissionsToRequest
-//            )
-//         }
-         DisposableEffect(key1 = Unit) {
-            val cameraPermission = Manifest.permission.CAMERA
+         LaunchedEffect(true) {
+           val cameraPermission = Manifest.permission.CAMERA
             logDebug(tag, "PermissionRequestLauncher launched")
             multiplePermissionRequestLauncher.launch(
                permissionsToRequest
             )
-            onDispose {
-               // Clean up the disposable effect
-
-            }
          }
       }
 
-      // Any requested permission not granted
-      // -> ask again or goto appsettings
+      // if a requested permission is not granted -> ask again or goto appsettings
       mainViewModel.permissionQueue
          .reversed()
          .forEach { permission ->
@@ -126,31 +119,29 @@ class MainActivity : BaseActivity(tag) {
                !shouldShowRequestPermissionRationale(permission)
             logDebug(tag, "permissionsQueue isPermanentlyDeclined $isPermanentlyDeclined")
 
+            // get the text for requested permission
             val permissionText: IPermissionText? = when (permission) {
                Manifest.permission.CAMERA -> PermissionCamera()
                Manifest.permission.RECORD_AUDIO -> PermissionRecordAudio()
                else -> null
             }
-            logDebug(tag, "permissionsQueue ${permissionText?.getDescription(isPermanentlyDeclined)}")
-
-            // https://semicolonspace.com/jetpack-compose-dialog/
+            logDebug(tag, "permissionsQueue " +
+               "${permissionText?.getDescription(isPermanentlyDeclined)}")
 
             AlertDialog(
                modifier = Modifier,
                onDismissRequest = {
                   dialogOpen = false
                },
-               // permission granted
+               // permission is granted, perform the confirm actions
                confirmButton = {
                   TextButton(
                      onClick = {
-                        // perform the confirm action
                         logDebug(tag, "confirmButton() $permission")
-                        mainViewModel.removePermission() // or viewModel::removeDialogFromQueue
-                        // launched dialog again
-                        multiplePermissionRequestLauncher.launch(
-                           arrayOf(permission)
-                        )
+                        // remove granted permission from the permissionQueue
+                        mainViewModel.removePermission()
+                        // launch the dialog again if further permissions are required
+                        multiplePermissionRequestLauncher.launch(arrayOf(permission))
                         // close the dialog
                         dialogOpen = false
                      }
@@ -158,19 +149,19 @@ class MainActivity : BaseActivity(tag) {
                      Text(text = "Zustimmen")
                   }
                },
+               // permission is declined, perform the decline actions
                dismissButton = {
                   TextButton(
                      onClick = {
-                        // perform the confirm action
                         logDebug(tag, "dismissButton() $permission")
                         if (! isPermanentlyDeclined) {
+                           // remove permanently declined permissions from the permissionQueue
                            mainViewModel.removePermission()
-                           // relaunch dialog again
-                           multiplePermissionRequestLauncher.launch(
-                              arrayOf(permission)
-                           )
+                           // launch the dialog again if further permissions are required
+                           multiplePermissionRequestLauncher.launch(arrayOf(permission))
                         } else {
                            logDebug(tag, "openAppSettings() $permission and exit the app")
+                           // as a last resort, go to the app settings and close the app
                            openAppSettings()
                            activity?.finish()
                         }
@@ -215,6 +206,13 @@ class MainActivity : BaseActivity(tag) {
       return true
    }
 
+   // static members
+   companion object {
+      const val isInfo = true
+      const val isDebug = true
+      //12345678901234567890123
+      private const val tag = "ok>MainActivity       ."
+   }
 }
 
 // static extension function for Activity
@@ -225,6 +223,7 @@ fun Activity.openAppSettings() {
    ).also(::startActivity)
 }
 
+
 @Preview(showBackground = true)
 @Composable
 fun Preview() {
@@ -232,32 +231,3 @@ fun Preview() {
    AppTheme {
    }
 }
-
-
-
-/*
-PermissionDialog(
-   permissionText = when (permission) {
-      Manifest.permission.CAMERA -> PermissionCamera()
-      Manifest.permission.RECORD_AUDIO -> PermissionRecordAudio()
-      else -> return@forEach
-   },
-   onConfirm = {
-      LogFun(tag, "onConfirm() $permission")
-      viewModel.removePermission() // or viewModel::removeDialogFromQueue
-      multiplePermissionRequestLauncher.launch(
-         arrayOf(permission)
-      )
-   },
-   onDismiss = {  // viewModel::removeDialogFromQueue,
-      LogFun(tag, "onDismiss() $permission")
-      viewModel.removePermission()
-   },
-   isPermanentlyDeclined =
-      !shouldShowRequestPermissionRationale(permission),
-   onGoToAppSettingsClick = {
-      LogFun(tag, "openAppSettings() $permission")
-      openAppSettings()
-   } //::openAppSettings
-)
-*/
