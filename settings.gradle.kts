@@ -13,5 +13,5 @@ dependencyResolutionManagement {
    }
 }
 
-rootProject.name = "A3_07_ComposePeople"
+rootProject.name = "A3_09_ComposePeople"
 include(":app")

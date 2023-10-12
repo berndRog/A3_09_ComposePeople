@@ -62,9 +62,8 @@ fun PeopleListScreen(
    val tag: String = "ok>PeopleListScreen   ."
 
    // testing the snackbar
-   // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...")
+   //viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...")
    val snackbarHostState = remember { SnackbarHostState() }
-   val coroutineScope = rememberCoroutineScope()
 
    Scaffold(
       topBar = {
@@ -121,7 +120,8 @@ fun PeopleListScreen(
             ) { person ->
                PersonListItem(
                   id = person.id,
-                  name = "${person.firstName} ${person.lastName} ",
+                  firstName = person.firstName,
+                  lastName = person.lastName,
                   email = person.email,
                   phone = person.phone,
                   imagePath = person.imagePath ?: "",
@@ -141,7 +141,8 @@ fun PeopleListScreen(
 @Composable
 fun PersonListItem(
    id: UUID,
-   name: String,
+   firstName: String,
+   lastName: String,
    email: String?,
    phone: String?,
    imagePath: String?,
@@ -149,7 +150,7 @@ fun PersonListItem(
 ) {
    //12345678901234567890123
    val tag = "ok>PersonListItem     ."
-   logDebug(tag, "Person: $name")
+   logDebug(tag, "Person: $firstName $lastName")
 
    var checked: Boolean by rememberSaveable { mutableStateOf(false) }
 
@@ -166,7 +167,7 @@ fun PersonListItem(
          Row {
             Column(modifier = Modifier.weight(0.85f)) {
                Text(
-                  text = name,
+                  text = "$firstName $lastName",
                   style = MaterialTheme.typography.bodyLarge,
                )
                email?.let {

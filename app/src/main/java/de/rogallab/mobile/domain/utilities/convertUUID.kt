@@ -5,5 +5,5 @@ import java.util.*
 fun UUID.as8(): String =
    this.toString().toString().substring(0..7)+"..."
 
-val UuidEmpty: UUID =
-   UUID.fromString("00000000-0000-0000-0000-000000000000")
+val UuidEmpty: UUID
+   get () = UUID.fromString("00000000-0000-0000-0000-000000000000")
