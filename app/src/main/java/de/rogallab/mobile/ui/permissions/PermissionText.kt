@@ -1,4 +1,6 @@
-package de.rogallab.mobile
+package de.rogallab.mobile.ui.permissions
+
+import de.rogallab.mobile.ui.permissions.IPermissionText
 
 class PermissionCamera : IPermissionText {
 //	<uses-feature

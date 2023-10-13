@@ -18,7 +18,7 @@ fun readImageFromInternalStorage(uri: Uri): Bitmap? {
 fun writeImageToInternalStorage(context: Context, bitmap: Bitmap): String? {
 // .../app_images/...
    val images: File = context.getDir("images", Context.MODE_PRIVATE)
-   val fileName: String = "${UUID.randomUUID().toString()}.jpg"
+   val fileName = "${UUID.randomUUID()}.jpg"
 
    var uriPath: String? = null
    File(images, fileName).apply {
@@ -33,7 +33,7 @@ fun writeImageToInternalStorage(context: Context, bitmap: Bitmap): String? {
    return uriPath
 }
 
-fun deleteFileOnInternalStorage(fileName:String): Boolean {
+fun deleteFileOnInternalStorage(fileName:String) {
    try {
       File(fileName).apply {
          this.absoluteFile.delete()
@@ -41,5 +41,4 @@ fun deleteFileOnInternalStorage(fileName:String): Boolean {
    } catch(e:Exception ) {
       logError("ok>deleteFileOnInternalStorage","Error deleting file + ${e.localizedMessage}")
    }
-   return true
 }

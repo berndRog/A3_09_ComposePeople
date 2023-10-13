@@ -9,7 +9,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import de.rogallab.android.ui.composables.TakePhotoWithCamera
 import de.rogallab.mobile.domain.utilities.logDebug
 
 @Composable
@@ -48,6 +47,8 @@ fun SelectAndShowImage(
             SelectPhotoFromGallery(
                onImagePathChanged = onImagePathChanged // Event ↑
             )
+
+            Spacer(modifier = Modifier.padding(vertical = 4.dp))
 
             TakePhotoWithCamera(
                onImagePathChanged = onImagePathChanged // Event ↑

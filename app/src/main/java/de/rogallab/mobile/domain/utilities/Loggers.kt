@@ -1,9 +1,6 @@
 package de.rogallab.mobile.domain.utilities
 
 import android.util.Log
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.remember
 import de.rogallab.mobile.MainActivity.Companion.isDebug
 import de.rogallab.mobile.MainActivity.Companion.isInfo
 

@@ -1,3 +1,5 @@
+@file:Suppress("RemoveCurlyBracesFromTemplate")
+
 package de.rogallab.mobile.domain.utilities
 
 import android.content.Context
@@ -8,7 +10,7 @@ import de.rogallab.mobile.data.io.deleteFileOnInternalStorage
 import de.rogallab.mobile.data.io.writeImageToInternalStorage
 import de.rogallab.mobile.domain.model.Person
 
-class Seed() {
+class Seed {
 
    private val _imagesUri = mutableListOf<String>()
 
@@ -43,7 +45,7 @@ class Seed() {
          val bitmap = BitmapFactory.decodeResource(resources, it)
          bitmap?.let { bitmap ->
             writeImageToInternalStorage(context, bitmap)?.let { uriPath:String? ->
-               logDebug("ok>SaveImage          .", "Uri ${uriPath}")
+               logDebug("ok>SaveImage          .", "Uri $uriPath")
                uriPath?.let {
                   _imagesUri.add(uriPath)
                }
@@ -63,7 +65,7 @@ class Seed() {
 
    fun disposeImages() {
       _imagesUri.forEach { uriPath ->
-         logDebug("ok>disposeImages      .", "Uri ${uriPath}")
+         logDebug("ok>disposeImages      .", "Uri $uriPath")
          deleteFileOnInternalStorage(uriPath)
       }
    }

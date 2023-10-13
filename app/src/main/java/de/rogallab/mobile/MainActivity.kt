@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -20,7 +19,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.currentCompositionLocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,12 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.viewModelScope
 import de.rogallab.mobile.domain.utilities.Seed
-import de.rogallab.mobile.ui.navigation.AppNavHost
-import de.rogallab.mobile.ui.theme.AppTheme
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.ui.navigation.AppNavHost
 import de.rogallab.mobile.ui.people.PeopleViewModel
+import de.rogallab.mobile.ui.permissions.IPermissionText
+import de.rogallab.mobile.ui.permissions.PermissionCamera
+import de.rogallab.mobile.ui.permissions.PermissionRecordAudio
+import de.rogallab.mobile.ui.theme.AppTheme
 
 class MainActivity : BaseActivity(tag) {
 
@@ -72,139 +72,6 @@ class MainActivity : BaseActivity(tag) {
    }
 
 
-   @Composable
-   private fun RequestPermissions(
-      permissionsToRequest: Array<String>,
-      mainViewModel: MainViewModel
-   ) {
-
-      val activity = (LocalContext.current as? Activity)
-
-      // Setup multiple permission request launcher
-      val multiplePermissionRequestLauncher = rememberLauncherForActivityResult(
-         contract = ActivityResultContracts.RequestMultiplePermissions(),
-         // callback: handle permissions results, i.e store them into the MainViewModel
-         onResult = { permissionMap: Map<String, @JvmSuppressWildcards Boolean> ->
-            logDebug(tag, "PermissionRequestLauncher onResult: ")
-            permissionsToRequest.forEach { permission ->
-               logDebug(tag,"$permission isGranted ${permissionMap[permission]}")
-               mainViewModel.addPermission(
-                  permission = permission,
-                  isGranted = permissionMap[permission] == true  // key = true
-               )
-            }
-         }
-      )
-
-      if (!arePermissionsAlreadyGranted(permissionsToRequest)) {
-         // Request permissions, i.e. launch dialog
-         LaunchedEffect(true) {
-           val cameraPermission = Manifest.permission.CAMERA
-            logDebug(tag, "PermissionRequestLauncher launched")
-            multiplePermissionRequestLauncher.launch(
-               permissionsToRequest
-            )
-         }
-      }
-
-      // if a requested permission is not granted -> ask again or goto appsettings
-      mainViewModel.permissionQueue
-         .reversed()
-         .forEach { permission ->
-            logDebug(tag, "permissionQueue $permission")
-
-            var dialogOpen by remember {  mutableStateOf(false) }
-
-            val isPermanentlyDeclined =
-               !shouldShowRequestPermissionRationale(permission)
-            logDebug(tag, "permissionsQueue isPermanentlyDeclined $isPermanentlyDeclined")
-
-            // get the text for requested permission
-            val permissionText: IPermissionText? = when (permission) {
-               Manifest.permission.CAMERA -> PermissionCamera()
-               Manifest.permission.RECORD_AUDIO -> PermissionRecordAudio()
-               else -> null
-            }
-            logDebug(tag, "permissionsQueue " +
-               "${permissionText?.getDescription(isPermanentlyDeclined)}")
-
-            AlertDialog(
-               modifier = Modifier,
-               onDismissRequest = {
-                  dialogOpen = false
-               },
-               // permission is granted, perform the confirm actions
-               confirmButton = {
-                  TextButton(
-                     onClick = {
-                        logDebug(tag, "confirmButton() $permission")
-                        // remove granted permission from the permissionQueue
-                        mainViewModel.removePermission()
-                        // launch the dialog again if further permissions are required
-                        multiplePermissionRequestLauncher.launch(arrayOf(permission))
-                        // close the dialog
-                        dialogOpen = false
-                     }
-                  ) {
-                     Text(text = "Zustimmen")
-                  }
-               },
-               // permission is declined, perform the decline actions
-               dismissButton = {
-                  TextButton(
-                     onClick = {
-                        logDebug(tag, "dismissButton() $permission")
-                        if (! isPermanentlyDeclined) {
-                           // remove permanently declined permissions from the permissionQueue
-                           mainViewModel.removePermission()
-                           // launch the dialog again if further permissions are required
-                           multiplePermissionRequestLauncher.launch(arrayOf(permission))
-                        } else {
-                           logDebug(tag, "openAppSettings() $permission and exit the app")
-                           // as a last resort, go to the app settings and close the app
-                           openAppSettings()
-                           activity?.finish()
-                        }
-                        // close the dialog
-                        dialogOpen = false
-                     }
-                  ) {
-                     Text(text = "Ablehnen")
-                  }
-               },
-               icon = {},
-               title = {
-                  Text(text = "Zustimmung erforderlich (Permission)")
-               },
-               text = {
-                  Text(
-                     text = permissionText?.getDescription(
-                        isPermanentlyDeclined = isPermanentlyDeclined
-                     ) ?: ""
-                  )
-               }
-            )
-         }
-   }
-
-   @Composable
-   private fun arePermissionsAlreadyGranted(
-      permissionsToRequest: Array<String>
-   ): Boolean {
-      permissionsToRequest.forEach { permissionToRequest ->
-         if (ContextCompat.checkSelfPermission(
-               LocalContext.current,
-               permissionToRequest
-            ) == PackageManager.PERMISSION_GRANTED) {
-            logDebug(tag, "requestPermission() $permissionToRequest already granted")
-         } else {
-            // permission must be requested
-            return false
-         }
-      }
-      // all permission are already granted
-      return true
-   }
 
    // static members
    companion object {
@@ -213,6 +80,145 @@ class MainActivity : BaseActivity(tag) {
       //12345678901234567890123
       private const val tag = "ok>MainActivity       ."
    }
+}
+
+@Composable
+fun RequestPermissions(
+   permissionsToRequest: Array<String>,
+   mainViewModel: MainViewModel
+) {
+
+   val tag = "ok>RequestPermissions ."
+
+   val activity = (LocalContext.current as? Activity)
+
+
+
+   // Setup multiple permission request launcher
+   val multiplePermissionRequestLauncher = rememberLauncherForActivityResult(
+      contract = ActivityResultContracts.RequestMultiplePermissions(),
+      // callback: handle permissions results, i.e store them into the MainViewModel
+      onResult = { permissionMap: Map<String, @JvmSuppressWildcards Boolean> ->
+         logDebug(tag, "PermissionRequestLauncher onResult: ")
+         permissionsToRequest.forEach { permission ->
+            logDebug(tag,"$permission isGranted ${permissionMap[permission]}")
+            mainViewModel.addPermission(
+               permission = permission,
+               isGranted = permissionMap[permission] == true  // key = true
+            )
+         }
+      }
+   )
+
+   if (!arePermissionsAlreadyGranted(permissionsToRequest, tag)) {
+      // Request permissions, i.e. launch dialog
+      LaunchedEffect(true) {
+         val cameraPermission = Manifest.permission.CAMERA
+         logDebug(tag, "PermissionRequestLauncher launched")
+         multiplePermissionRequestLauncher.launch(
+            permissionsToRequest
+         )
+      }
+   }
+
+   // if a requested permission is not granted -> ask again or goto appsettings
+   mainViewModel.permissionQueue
+      .reversed()
+      .forEach { permission ->
+         logDebug(tag, "permissionQueue $permission")
+
+         var dialogOpen by remember {  mutableStateOf(false) }
+
+         val isPermanentlyDeclined =
+            activity!!.shouldShowRequestPermissionRationale(permission)
+         logDebug(tag, "permissionsQueue isPermanentlyDeclined $isPermanentlyDeclined")
+
+         // get the text for requested permission
+         val permissionText: IPermissionText? = when (permission) {
+            Manifest.permission.CAMERA -> PermissionCamera()
+            Manifest.permission.RECORD_AUDIO -> PermissionRecordAudio()
+            else -> null
+         }
+         logDebug(tag, "permissionsQueue " +
+            "${permissionText?.getDescription(isPermanentlyDeclined)}")
+
+         AlertDialog(
+            modifier = Modifier,
+            onDismissRequest = {
+               dialogOpen = false
+            },
+            // permission is granted, perform the confirm actions
+            confirmButton = {
+               TextButton(
+                  onClick = {
+                     logDebug(tag, "confirmButton() $permission")
+                     // remove granted permission from the permissionQueue
+                     mainViewModel.removePermission()
+                     // launch the dialog again if further permissions are required
+                     multiplePermissionRequestLauncher.launch(arrayOf(permission))
+                     // close the dialog
+                     dialogOpen = false
+                  }
+               ) {
+                  Text(text = "Zustimmen")
+               }
+            },
+            // permission is declined, perform the decline actions
+            dismissButton = {
+               TextButton(
+                  onClick = {
+                     logDebug(tag, "dismissButton() $permission")
+                     if (! isPermanentlyDeclined) {
+                        // remove permanently declined permissions from the permissionQueue
+                        mainViewModel.removePermission()
+                        // launch the dialog again if further permissions are required
+                        multiplePermissionRequestLauncher.launch(arrayOf(permission))
+                     } else {
+                        logDebug(tag, "openAppSettings() $permission and exit the app")
+                        // as a last resort, go to the app settings and close the app
+                        activity?.openAppSettings()
+                        activity?.finish()
+                     }
+                     // close the dialog
+                     dialogOpen = false
+                  }
+               ) {
+                  Text(text = "Ablehnen")
+               }
+            },
+            icon = {},
+            title = {
+               Text(text = "Zustimmung erforderlich (Permission)")
+            },
+            text = {
+               Text(
+                  text = permissionText?.getDescription(
+                     isPermanentlyDeclined = isPermanentlyDeclined
+                  ) ?: ""
+               )
+            }
+         )
+      }
+}
+
+@Composable
+fun arePermissionsAlreadyGranted(
+   permissionsToRequest: Array<String>,
+   tag: String
+): Boolean {
+   permissionsToRequest.forEach { permissionToRequest ->
+      if (ContextCompat.checkSelfPermission(
+            LocalContext.current,
+            permissionToRequest
+         ) == PackageManager.PERMISSION_GRANTED) {
+         logDebug(tag, "requestPermission() $permissionToRequest already granted")
+      } else {
+         // permission must be requested
+         return false
+      }
+   }
+   // all permission are already granted
+   return true
 }
 
 // static extension function for Activity

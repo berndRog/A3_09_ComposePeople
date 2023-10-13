@@ -1,16 +1,16 @@
 package de.rogallab.mobile.ui.people
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
@@ -26,21 +26,18 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import de.rogallab.mobile.R
+import de.rogallab.mobile.domain.utilities.logInfo
 import de.rogallab.mobile.ui.composables.InputNameMailPhone
 import de.rogallab.mobile.ui.composables.SelectAndShowImage
 import de.rogallab.mobile.ui.composables.ShowErrorMessage
 import de.rogallab.mobile.ui.navigation.NavScreen
-import de.rogallab.mobile.ui.theme.AppTheme
-import de.rogallab.mobile.domain.utilities.logDebug
-import de.rogallab.mobile.domain.utilities.logInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PersonInputScreen(
    navController: NavController,
-   viewModel: PeopleViewModel,
+   viewModel: PeopleViewModel
 ) {
-
    val tag = "ok>PersonInputScreen  ."
 
    LaunchedEffect(Unit) {
@@ -65,11 +62,6 @@ fun PersonInputScreen(
    )
 
    val snackbarHostState = remember { SnackbarHostState() }
-   val coroutineScope = rememberCoroutineScope()
-   // testing the snackbar
-   // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...")
-
-   // https://stackoverflow.com/questions/72926359/show-snackbar-in-material-design-3-using-scaffold
 
    Scaffold(
       topBar = {
@@ -77,6 +69,7 @@ fun PersonInputScreen(
             title = { Text(stringResource(R.string.person_input)) },
             navigationIcon = {
                IconButton(onClick = {
+                  viewModel.add()
                   navController.navigate(route = NavScreen.PeopleList.route) {
                      popUpTo(route = NavScreen.PeopleList.route) { inclusive = true }
                   }
@@ -121,34 +114,25 @@ fun PersonInputScreen(
                imagePath = viewModel.imagePath,                          // State ↓
                onImagePathChanged = { viewModel.onImagePathChange(it) }  // Event ↑
             )
-
-            Button(
-               modifier = Modifier
-                  .fillMaxWidth(),
-               onClick = {
-                  logDebug(tag, "onClickHandler()")
-                  val id = viewModel.add()
-                  navController.navigate(route = NavScreen.PeopleList.route) {
-                     popUpTo(route = NavScreen.PeopleList.route) { inclusive = true }
-                  }
-               }
-            ) {
-               Text(
-                  style = MaterialTheme.typography.bodyLarge,
-                  text = stringResource(R.string.save)
-               )
-            }
          }
-
-         ShowErrorMessage(
-            snackbarHostState = snackbarHostState,           // State ↓
-            coroutineScope = coroutineScope,                 // State ↓
-            errorMessage = viewModel.errorMessage,           // State ↓
-            actionLabel = "Abbrechen",                       // State ↓
-            onErrorDismiss = { viewModel.onErrorDismiss() }, // Event ↑
-            onErrorAction = { viewModel.onErrorAction() },   // Event ↑
-         )
-
       }
    )
+
+   val coroutineScope = rememberCoroutineScope()
+   // testing the snackbar
+   // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...","PersonInputScreen")
+
+   viewModel.errorMessage?.let {
+      if(viewModel.errorFrom == "PersonInputScreen" ) {
+         LaunchedEffect(it) {
+            ShowErrorMessage(
+               snackbarHostState = snackbarHostState,
+               errorMessage = it,
+               actionLabel = "ToDo",
+               onErrorAction = { viewModel.onErrorAction() }
+            )
+         }
+         viewModel.onErrorMessage( null, null)
+      }
+   }
 }

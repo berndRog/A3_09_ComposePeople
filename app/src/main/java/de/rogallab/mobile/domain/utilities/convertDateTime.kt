@@ -127,6 +127,6 @@ fun toZonedDateTime(zulu: String): ZonedDateTime =
 
 // epoch --> ZonedDateTime
 fun toZonedDateTime(epoch: Long): ZonedDateTime {
-   val instant = Instant.ofEpochMilli(epoch);
+   val instant = Instant.ofEpochMilli(epoch)
    return ZonedDateTime.ofInstant(instant, givenZoneId)
 }

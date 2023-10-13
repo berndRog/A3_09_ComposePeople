@@ -2,11 +2,8 @@ package de.rogallab.mobile.ui.people
 
 import android.app.Activity
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +12,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,10 +26,10 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,6 +45,7 @@ import de.rogallab.mobile.R
 import de.rogallab.mobile.domain.model.Person
 import de.rogallab.mobile.ui.navigation.NavScreen
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.ui.composables.ShowErrorMessage
 import java.util.UUID
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,13 +53,11 @@ import java.util.UUID
 @Composable
 fun PeopleListScreen(
    navController: NavController,
-   viewModel: PeopleViewModel,
+   viewModel: PeopleViewModel
 ) {
 
-   val tag: String = "ok>PeopleListScreen   ."
+   val tag = "ok>PeopleListScreen   ."
 
-   // testing the snackbar
-   //viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...")
    val snackbarHostState = remember { SnackbarHostState() }
 
    Scaffold(
@@ -130,12 +125,31 @@ fun PeopleListScreen(
                      // Navigate to 'PersonDetail' destination and put 'PeopleList' on the back stack
                      navController.navigate(
                         route = NavScreen.PersonDetail.route + "/$id"
-                     )},
+                     )
+                  },
                ) // end personListItem
             }
+            //viewModel.onErrorMessage("Fehler in LazyColumn", "PeopleListScreen")
          }
       }
    ) // end Scaffold
+
+   // testing the snackbar
+   // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...","PeopleListScreen")
+
+   viewModel.errorMessage?.let{
+      if(viewModel.errorFrom == "PeopleListScreen" ) {
+         LaunchedEffect(it) {
+            ShowErrorMessage(
+               snackbarHostState = snackbarHostState,
+               errorMessage = it,
+               actionLabel = "Abbrechen",
+               onErrorAction = { viewModel.onErrorAction() }
+            )
+         }
+         viewModel.onErrorMessage(null, null)
+      }
+   }
 }
 
 @Composable

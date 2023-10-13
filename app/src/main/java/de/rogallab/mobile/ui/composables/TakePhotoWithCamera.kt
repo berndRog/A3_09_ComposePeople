@@ -1,4 +1,4 @@
-package de.rogallab.android.ui.composables
+package de.rogallab.mobile.ui.composables
 
 import android.graphics.Bitmap
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AddAPhoto
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -56,7 +55,7 @@ fun TakePhotoWithCamera(
    }
 
    Button(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier.padding(horizontal = 4.dp).fillMaxWidth(),
       onClick = {
          logDebug("ok>Take a photo       .", "Click")
          cameraLauncher.launch()
@@ -69,9 +68,9 @@ fun TakePhotoWithCamera(
             contentDescription = stringResource(R.string.back))
 
          Text(
-            modifier = Modifier.padding(start = 16.dp),
+            modifier = Modifier.padding(start= 8.dp),
             text = "Bitte nehmen Sie ein Foto auf",
-            style = MaterialTheme.typography.bodyLarge
+            style = MaterialTheme.typography.bodyMedium
          )
       }
    }

@@ -10,7 +10,7 @@ fun isValidEmail(email: String): Boolean {
    //   "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$"
    //   .toRegex()
    // return email.matches(emailRegex)
-   return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches();
+   return android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()
 }
 
 fun isValidPhone(phone: String): Boolean {

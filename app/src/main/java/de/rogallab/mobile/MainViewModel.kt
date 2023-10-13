@@ -5,11 +5,9 @@ import android.content.res.Resources
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.ViewModel
 import de.rogallab.mobile.domain.utilities.Seed
 import de.rogallab.mobile.domain.utilities.logDebug
 import de.rogallab.mobile.domain.utilities.logInfo
-import java.io.Closeable
 
 class MainViewModel(
    private val _application: Application
