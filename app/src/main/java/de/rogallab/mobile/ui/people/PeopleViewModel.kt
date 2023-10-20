@@ -7,11 +7,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.lifecycle.ViewModel
+import de.rogallab.mobile.AppStart
 import de.rogallab.mobile.domain.model.Person
 import de.rogallab.mobile.domain.utilities.Seed
 import de.rogallab.mobile.domain.utilities.UUIDEmpty
 import de.rogallab.mobile.domain.utilities.as8
 import de.rogallab.mobile.domain.utilities.logDebug
+import de.rogallab.mobile.domain.utilities.logInfo
+import de.rogallab.mobile.ui.MainViewModel
 
 import java.util.*
 
@@ -68,18 +71,24 @@ class PeopleViewModel: ViewModel() {
       // toDo
    }
 
-   // mutabelList with observer
+   // FAB clicked -> InputScreen initialized
+   var isInput = true
+   // LazyColum item clicked -> DetailScreen initialized
+   var isDetail = true
+
+   // mutableList with observer
    val people: SnapshotStateList<Person> = mutableStateListOf()
+
+   fun initialize(seed:Seed): Boolean {
+      logDebug(tag,"initialize people from seed")
+      return people.addAll(seed.people)
+   }
 
    // lifecycle ViewModel
    override fun onCleared() {
       Log.d(tag, "onCleared()")
       super.onCleared()
-   }
-
-   fun initialize(seed:Seed): Boolean {
-      logDebug(tag,"initialize people from seed")
-      return people.addAll(seed.people)
+      AppStart.seed.disposeImages()
    }
 
    fun readById(personId: UUID) {

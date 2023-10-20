@@ -83,6 +83,8 @@ fun PeopleListScreen(
             containerColor = MaterialTheme.colorScheme.tertiary,
             onClick = {
                logDebug(tag, "Forward Navigation: FAB clicked")
+               // FAB clicked -> InputScreen initialized
+               viewModel.isInput = true
                // Navigate to 'PersonDetail' destination and put 'PeopleList' on the back stack
                navController.navigate(
                   route = NavScreen.PersonInput.route
@@ -120,14 +122,16 @@ fun PeopleListScreen(
                   email = person.email,
                   phone = person.phone,
                   imagePath = person.imagePath ?: "",
-                  onClick = { id -> // Event ↑  Row(task.id)
+                  onClick = { id ->
+                     // LazyColum item clicked -> DetailScreen initialized
+                     viewModel.isDetail = true
                      logDebug(tag, "Forward Navigation: Item clicked")
                      // Navigate to 'PersonDetail' destination and put 'PeopleList' on the back stack
                      navController.navigate(
                         route = NavScreen.PersonDetail.route + "/$id"
                      )
                   },
-               ) // end personListItem
+               )
             }
             //viewModel.onErrorMessage("Fehler in LazyColumn", "PeopleListScreen")
          }
@@ -137,8 +141,8 @@ fun PeopleListScreen(
    // testing the snackbar
    // viewModel.onErrorMessage("Test SnackBar: Fehlermeldung ...","PeopleListScreen")
 
-   viewModel.errorMessage?.let{
-      if(viewModel.errorFrom == "PeopleListScreen" ) {
+   viewModel.errorMessage?.let {
+      if (viewModel.errorFrom == "PeopleListScreen") {
          LaunchedEffect(it) {
             ShowErrorMessage(
                snackbarHostState = snackbarHostState,
@@ -168,52 +172,51 @@ fun PersonListItem(
 
    var checked: Boolean by rememberSaveable { mutableStateOf(false) }
 
-   Column {
-
+   Column(modifier = Modifier
+      .clickable {
+         logDebug(tag, "Row onClick()")
+         onClick(id)  // Event ↑
+      }
+   ) {
       Row(
-         verticalAlignment = Alignment.CenterVertically,
-         modifier = Modifier
-            .clickable {
-               logDebug(tag, "Row onClick()")
-               onClick(id)  // Event ↑
-            }
+        verticalAlignment = Alignment.CenterVertically,
       ) {
-         Row {
-            Column(modifier = Modifier.weight(0.85f)) {
+
+         Column(modifier = Modifier.weight(0.85f)) {
+            Text(
+               text = "$firstName $lastName",
+               style = MaterialTheme.typography.bodyLarge,
+            )
+            email?.let {
                Text(
-                  text = "$firstName $lastName",
-                  style = MaterialTheme.typography.bodyLarge,
+                  modifier = Modifier.padding(top = 4.dp),
+                  text = it,
+                  style = MaterialTheme.typography.bodyMedium
                )
-               email?.let {
-                  Text(
-                     modifier = Modifier.padding(top = 4.dp),
-                     text = it,
-                     style = MaterialTheme.typography.bodyMedium
-                  )
-               }
-               phone?.let {
-                  Text(
-                     text = phone,
-                     style = MaterialTheme.typography.bodyMedium,
-                     modifier = Modifier
-                  )
-               }
             }
-            Column(modifier = Modifier.weight(0.15f)) {
-               imagePath?.let { path: String ->                  // State ↓
-                  AsyncImage(
-                     model = path,
-                     contentDescription = "Bild der Person",
-                     modifier = Modifier
-                        .size(width = 60.dp, height = 75.dp)
-                        .clip(RoundedCornerShape(percent = 5)),
-                     alignment = Alignment.Center,
-                     contentScale = ContentScale.Crop
-                  )
-               }
+            phone?.let {
+               Text(
+                  text = phone,
+                  style = MaterialTheme.typography.bodyMedium,
+                  modifier = Modifier
+               )
+            }
+         }
+         Column(modifier = Modifier.weight(0.15f)) {
+            imagePath?.let { path: String ->                  // State ↓
+               AsyncImage(
+                  model = path,
+                  contentDescription = "Bild der Person",
+                  modifier = Modifier
+                     .size(width = 60.dp, height = 75.dp)
+                     .clip(RoundedCornerShape(percent = 5)),
+                  alignment = Alignment.Center,
+                  contentScale = ContentScale.Crop
+               )
             }
          }
       }
+
       Divider(modifier = Modifier.padding(vertical = 8.dp))
    }
 }

@@ -1,8 +1,8 @@
 package de.rogallab.mobile.domain.utilities
 
 import android.util.Log
-import de.rogallab.mobile.MainActivity.Companion.isDebug
-import de.rogallab.mobile.MainActivity.Companion.isInfo
+import de.rogallab.mobile.AppStart.Companion.isDebug
+import de.rogallab.mobile.AppStart.Companion.isInfo
 
 fun logError(tag: String, message: String) {
    val msg = formatMessage(message)

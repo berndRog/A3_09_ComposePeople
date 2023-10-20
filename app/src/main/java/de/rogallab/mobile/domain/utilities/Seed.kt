@@ -11,18 +11,16 @@ import de.rogallab.mobile.data.io.writeImageToInternalStorage
 import de.rogallab.mobile.domain.model.Person
 
 class Seed {
-
    private val _imagesUri = mutableListOf<String>()
 
    val person1 = Person("Achim","Arndt","a.arndt@t-online.de","05826 / 1234 5678")
-   val person2 = Person("Benno","Bauer","b.bauer@outlook.com","0581 / 1234 5678")
-   val person3 = Person("Christine","Connrad","c.conrad@google.com")
-   val person4 = Person("Dagmar","Deppe","d.deppe@freenet.de")
-   val person5 = Person("Erika","Erdmann","e.erdmann@icloud.com")
-   val person6 = Person("Fritz","Fischer","f.fischer@google.com")
+   val person2 = Person("Benno","Bauer","b.bauer@outlook.com","0581 / 987 563")
+   val person3 = Person("Christine","Connrad","c.conrad@google.com", "04131 / 234 567")
+   val person4 = Person("Dagmar","Deppe","d.deppe@freenet.de", "05191 / 5678 90")
+   val person5 = Person("Erika","Erdmann","e.erdmann@icloud.com", "05141 / 4567 89")
+   val person6 = Person("Fritz","Fischer","f.fischer@google.com", "05317 / 5678 90")
 
    val people = listOf(person1, person2, person3, person4, person5, person6)
-
 
    fun initializeImages(
       context: Context,

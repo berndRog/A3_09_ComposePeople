@@ -1,36 +1,21 @@
-package de.rogallab.mobile
+package de.rogallab.mobile.ui
 
-import android.app.Application
-import android.content.res.Resources
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.lifecycle.AndroidViewModel
-import de.rogallab.mobile.domain.utilities.Seed
+import androidx.lifecycle.ViewModel
+import de.rogallab.mobile.AppStart
 import de.rogallab.mobile.domain.utilities.logDebug
 import de.rogallab.mobile.domain.utilities.logInfo
 
 class MainViewModel(
-   private val _application: Application
-): AndroidViewModel(_application) {
-
-   private lateinit var _resources: Resources
-
-   val seed = Seed()
+): ViewModel() {
 
    val permissionQueue: SnapshotStateList<String> = mutableStateListOf()
-
-   fun initializeImages(
-      resources: Resources
-   ) {
-      _resources = resources
-      val context = _application.applicationContext
-      seed.initializeImages(context, _resources)
-   }
 
    override fun onCleared() {
       super.onCleared()
       logInfo(tag,"onCleared()")
-      seed.disposeImages()
+      AppStart.seed.disposeImages()
    }
 
     fun addPermission(
